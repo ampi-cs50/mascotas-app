@@ -1,0 +1,290 @@
+// ====================================================================
+// Documento de Arquitectura y Diseño - App de Cuidado Preventivo
+// Guía de Estilos UI/UX (Estilo: Amigable y Natural)
+// ====================================================================
+
+:root {
+  // Paleta Hexadecimal estricta
+  --color-bg-main: #C3D8C4;         // Verde salvia
+  --color-card-bg: #F9F8F3;         // Blanco cálido
+  --color-active: #7A9E7E;          // Verde oscuro
+  --color-active-light: #e4eee4;    // Verde suave de soporte
+  --color-alert: #E07A5F;           // Naranja terracota
+  --color-alert-light: #fae8e3;     // Naranja suave alerta
+  --color-text-main: #2D3A2F;       // Gris oscuro / pizarra
+  --color-text-muted: #5f7062;      // Gris secundario natural
+  --color-border: rgba(45, 58, 47, 0.12);
+  --color-shadow: rgba(45, 58, 47, 0.08);
+
+  // Niveles de peligro
+  --danger-mild: #6b9080;
+  --danger-moderate: #e9c46a;
+  --danger-severe: #e07a5f;
+  --danger-fatal: #c1121f;
+
+  // Geometría y Espaciado en REM
+  --radius-container: 2rem;
+  --radius-pill: 1.25rem;
+  --radius-sm: 0.75rem;
+
+  --space-05: 0.5rem;
+  --space-10: 1rem;
+  --space-15: 1.5rem;
+  --space-20: 2rem;
+  --space-25: 2.5rem;
+  --space-30: 3rem;
+
+  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mobile-width: 25rem;
+}
+
+// Reset y Normalización
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  min-height: 100%;
+  font-family: var(--font-family);
+  font-size: 16px;
+  background-color: #a9c5ab;
+  background-image: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(122, 158, 126, 0.25) 0%, transparent 40%);
+  color: var(--color-text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Enfoque visual: Mobile-First centrado con max-width: 25rem simulando pantalla de celular en escritorio
+.app-viewport {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0;
+
+  @media (min-width: 45rem) {
+    padding: var(--space-20) 0;
+  }
+}
+
+.mobile-frame {
+  width: 100%;
+  max-width: var(--mobile-width);
+  height: 100vh;
+  height: 100dvh;
+  background-color: var(--color-bg-main);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  @media (min-width: 45rem) {
+    height: 94vh;
+    max-height: 54rem;
+    min-height: 42rem;
+    border-radius: var(--radius-container);
+    box-shadow: 0 1.5rem 3.5rem rgba(45, 58, 47, 0.22),
+                0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
+    border: 0.5rem solid #202b22;
+  }
+}
+
+app-header {
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+app-bottom-nav {
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+// Contenedor de contenido deslizable
+.screen-scroll-container {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-10) var(--space-10) 3rem var(--space-10);
+  -webkit-overflow-scrolling: touch;
+
+  &--no-nav {
+    padding-bottom: var(--space-10);
+  }
+
+  &::-webkit-scrollbar {
+    width: 0.35rem;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(45, 58, 47, 0.15);
+    border-radius: var(--radius-pill);
+  }
+}
+
+// Tarjetas y Contenedores principales (2rem border-radius)
+.card {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-container);
+  padding: var(--space-10);
+  box-shadow: 0 0.5rem 1.25rem var(--color-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  margin-bottom: var(--space-10);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &--interactive:active {
+    transform: scale(0.985);
+  }
+}
+
+// Botones y Píldoras (1.25rem border-radius)
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-05);
+  padding: var(--space-05) var(--space-10);
+  border-radius: var(--radius-pill);
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: var(--color-card-bg);
+  color: var(--color-text-main);
+
+  &:hover {
+    filter: brightness(0.97);
+  }
+
+  &--active {
+    background-color: var(--color-active);
+    color: #ffffff;
+    border-color: var(--color-active);
+    box-shadow: 0 0.25rem 0.75rem rgba(122, 158, 126, 0.35);
+  }
+}
+
+// Botón Principal de Guardado / Alertas (Naranja terracota #E07A5F)
+.btn-primary-action {
+  width: 100%;
+  padding: var(--space-10);
+  background-color: var(--color-alert);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-05);
+  cursor: pointer;
+  box-shadow: 0 0.5rem 1.25rem rgba(224, 122, 95, 0.35);
+  transition: transform 0.18s ease, filter 0.18s ease;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+// Tipografía
+h1, .h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  line-height: 1.2;
+}
+
+h2, .h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin-bottom: var(--space-05);
+}
+
+h3, .h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+p, span {
+  color: var(--color-text-main);
+  font-size: 0.925rem;
+  line-height: 1.45;
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+  font-size: 0.825rem;
+}
+
+// Alertas y Badges de Peligro
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+
+  &--fatal {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #f87171;
+  }
+
+  &--severe {
+    background-color: var(--color-alert-light);
+    color: #9c361c;
+    border: 1px solid #fca5a5;
+  }
+
+  &--moderate {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+  }
+
+  &--mild {
+    background-color: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+  }
+}
+
+// Input styling
+.form-input {
+  width: 100%;
+  padding: var(--space-05) var(--space-10);
+  background-color: var(--color-card-bg);
+  border: 1.5px solid rgba(45, 58, 47, 0.18);
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--color-text-main);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus {
+    border-color: var(--color-active);
+    box-shadow: 0 0 0 3px rgba(122, 158, 126, 0.25);
+  }
+}
