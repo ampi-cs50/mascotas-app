@@ -1,0 +1,18 @@
+<div class="app-viewport">
+  <main class="mobile-frame">
+    <!-- Header with User Profile, Pet Switcher, and Logout (shown when authenticated) -->
+    @if (isAuthenticated()) {
+      <app-header></app-header>
+    }
+
+    <!-- Scrollable Screen Content Area -->
+    <section class="screen-scroll-container" [class.screen-scroll-container--no-nav]="!isAuthenticated()" aria-label="Contenido principal">
+      <router-outlet></router-outlet>
+    </section>
+
+    <!-- Fixed Bottom Navigation (only shown when authenticated) -->
+    @if (isAuthenticated()) {
+      <app-bottom-nav></app-bottom-nav>
+    }
+  </main>
+</div>
