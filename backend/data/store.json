@@ -1,0 +1,229 @@
+{
+  "users": [
+    {
+      "id": "usr-001",
+      "email": "demo@mascotas.care",
+      "password_hash": "$2a$10$SNCmSvaizaArukk9kZdpLOO/0.RBt0UnvKDmg.43yDFbZYq0pGeci",
+      "name": "Amparo Rodríguez",
+      "created_at": "2026-10-14T22:55:33.144Z"
+    }
+  ],
+  "pets": [
+    {
+      "id": "pet-cat-01",
+      "user_id": "usr-001",
+      "name": "Luna",
+      "species": "CAT",
+      "birth_date": "2022-04-15",
+      "weight_kg": 3.85,
+      "avatar_url": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200&auto=format&fit=crop&q=80"
+    },
+    {
+      "id": "pet-dog-02",
+      "user_id": "usr-001",
+      "name": "Chester",
+      "species": "DOG",
+      "birth_date": "2021-08-10",
+      "weight_kg": 26.5,
+      "avatar_url": "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&auto=format&fit=crop&q=80"
+    }
+  ],
+  "daily_logs": [
+    {
+      "id": "log-01",
+      "pet_id": "pet-cat-01",
+      "log_date": "2026-10-09",
+      "water_intake": "NORMAL",
+      "food_intake": "NORMAL",
+      "litter_urine": "NORMAL",
+      "energy_mood": "PLAYFUL",
+      "notes": "Jugó animadamente y comió su ración completa.",
+      "created_at": "2026-10-09T18:00:00.000Z"
+    },
+    {
+      "id": "log-02",
+      "pet_id": "pet-cat-01",
+      "log_date": "2026-10-10",
+      "water_intake": "NORMAL",
+      "food_intake": "NORMAL",
+      "litter_urine": "NORMAL",
+      "energy_mood": "ACTIVE",
+      "notes": "Día tranquilo con buen apetito.",
+      "created_at": "2026-10-10T19:00:00.000Z"
+    },
+    {
+      "id": "log-03",
+      "pet_id": "pet-cat-01",
+      "log_date": "2026-10-11",
+      "water_intake": "HIGH",
+      "food_intake": "NORMAL",
+      "litter_urine": "EXCESSIVE",
+      "energy_mood": "CALM",
+      "notes": "Bebió más agua de lo habitual por día templado.",
+      "created_at": "2026-10-11T20:00:00.000Z"
+    },
+    {
+      "id": "log-04",
+      "pet_id": "pet-cat-01",
+      "log_date": "2026-10-12",
+      "water_intake": "NORMAL",
+      "food_intake": "LOW",
+      "litter_urine": "NORMAL",
+      "energy_mood": "LETHARGIC",
+      "notes": "Comió la mitad del plato. Se observa algo decaída.",
+      "created_at": "2026-10-12T20:30:00.000Z"
+    },
+    {
+      "id": "log-05",
+      "pet_id": "pet-cat-01",
+      "log_date": "2026-10-13",
+      "water_intake": "NORMAL",
+      "food_intake": "NORMAL",
+      "litter_urine": "NORMAL",
+      "energy_mood": "ACTIVE",
+      "notes": "Recuperó energía habitual tras cepillado matutino.",
+      "created_at": "2026-10-13T19:00:00.000Z"
+    },
+    {
+      "id": "log-06",
+      "pet_id": "pet-cat-01",
+      "log_date": "2026-10-14",
+      "water_intake": "HIGH",
+      "food_intake": "LOW",
+      "litter_urine": "EXCESSIVE",
+      "energy_mood": "LETHARGIC",
+      "notes": "",
+      "created_at": "2026-10-14T23:13:39.912Z"
+    }
+  ],
+  "clinical_events": [
+    {
+      "id": "ev-01",
+      "pet_id": "pet-cat-01",
+      "event_type": "VACCINE",
+      "event_date": "2026-03-10",
+      "title": "Vacuna Triple Felina (Refuerzo)",
+      "notes": "Vacuna anual administrada sin reacciones adversas."
+    },
+    {
+      "id": "ev-02",
+      "pet_id": "pet-cat-01",
+      "event_type": "DEWORMING",
+      "event_date": "2026-05-15",
+      "title": "Desparasitación Interna (Praziquantel)",
+      "notes": "Comprimido palatable tolerado favorablemente."
+    },
+    {
+      "id": "ev-03",
+      "pet_id": "pet-dog-02",
+      "event_type": "VACCINE",
+      "event_date": "2026-02-20",
+      "title": "Vacuna Séxtuple Canina y Antirrábica",
+      "notes": "Control de peso ok (26.5kg)."
+    }
+  ],
+  "toxicity_directory": [
+    {
+      "id": "tox-01",
+      "name": "Lirio (Lilium / Hemerocallis)",
+      "category": "PLANT",
+      "danger_level": "FATAL",
+      "symptoms": "Vómitos, sialorrea, letargo extremo, anuria y fallo renal agudo irreversible en 24-72h.",
+      "action_required": "Acudir a urgencias veterinarias de inmediato. Muy tóxico para gatos incluso en pequeñas cantidades de polen o agua del jarrón.",
+      "target_species": "CAT"
+    },
+    {
+      "id": "tox-02",
+      "name": "Chocolate (Teobromina)",
+      "category": "FOOD",
+      "danger_level": "SEVERE",
+      "symptoms": "Vómitos, diarrea, sed excesiva, jadeo continuo, hiperactividad, arritmia cardíaca y convulsiones.",
+      "action_required": "Urgencia veterinaria. No inducir el vómito si pasaron más de 2h o si el animal está desorientado.",
+      "target_species": "ALL"
+    },
+    {
+      "id": "tox-03",
+      "name": "Ibuprofeno / Medicamentos AINEs",
+      "category": "MEDICATION",
+      "danger_level": "FATAL",
+      "symptoms": "Úlceras gástricas, vómito con sangre, heces oscuras, dolor abdominal, insuficiencia renal aguda y shock.",
+      "action_required": "Acudir a urgencias de inmediato. Llevar la caja del medicamento para calcular la dosis tóxica por kilo.",
+      "target_species": "ALL"
+    },
+    {
+      "id": "tox-04",
+      "name": "Uvas y Pasas",
+      "category": "FOOD",
+      "danger_level": "SEVERE",
+      "symptoms": "Vómito dentro de las primeras horas, diarrea, letargo severo, deshidratación y daño renal repentino.",
+      "action_required": "Contactar a clínica de inmediato para lavado gástrico y fluidoterapia intravenosa preventiva.",
+      "target_species": "DOG"
+    },
+    {
+      "id": "tox-05",
+      "name": "Paracetamol (Acetaminofén)",
+      "category": "MEDICATION",
+      "danger_level": "FATAL",
+      "symptoms": "Methemoglobinemia, mucosas cianóticas (azuladas/grisáceas), hipotermia, hinchazón facial y necrosis hepática.",
+      "action_required": "Urgencia veterinaria máxima. Los gatos carecen de la enzima hepática para metabolizarlo. Antídoto: N-acetilcisteína.",
+      "target_species": "ALL"
+    },
+    {
+      "id": "tox-06",
+      "name": "Cuerpo Extraño Lineal (Hilo, Lana, Hilo dental)",
+      "category": "OBJECT",
+      "danger_level": "SEVERE",
+      "symptoms": "Vómitos repetitivos, dolor abdominal palpable, decaimiento progresivo, postura encorvada.",
+      "action_required": "NUNCA tirar del hilo visible en la boca o el recto; puede seccionar la pared intestinal. Acudir a urgencias quirúrgicas.",
+      "target_species": "CAT"
+    },
+    {
+      "id": "tox-07",
+      "name": "Lavandina / Cloro domésico",
+      "category": "CHEMICAL",
+      "danger_level": "SEVERE",
+      "symptoms": "Quemaduras químicas en mucosa oral y esófago, salivación profusa, tos espasmódica y náuseas.",
+      "action_required": "NO provocar el vómito para no quemar el esófago nuevamente. Ofrecer agua fresca y llevar a clínica de inmediato.",
+      "target_species": "ALL"
+    },
+    {
+      "id": "tox-08",
+      "name": "Cebolla, Ajo y Puerro",
+      "category": "FOOD",
+      "danger_level": "MODERATE",
+      "symptoms": "Anemia hemolítica (cuerpos de Heinz), debilidad, encías pálidas, letargo y orina rojiza.",
+      "action_required": "Consultar al veterinario para control de glóbulos rojos y soporte vitamínico.",
+      "target_species": "ALL"
+    },
+    {
+      "id": "tox-09",
+      "name": "Monstera / Costilla de Adán",
+      "category": "PLANT",
+      "danger_level": "MODERATE",
+      "symptoms": "Irritación oral intensa por oxalatos de calcio insolubles, salivación, dificultad para deglutir.",
+      "action_required": "Limpiar la cavidad oral con agua fría o leche para precipitar cristales de oxalato. Si persiste inflamación, acudir a clínica.",
+      "target_species": "ALL"
+    },
+    {
+      "id": "tox-10",
+      "name": "Poinsettia / Flor de Pascua",
+      "category": "PLANT",
+      "danger_level": "MILD",
+      "symptoms": "Salivación moderada, irritación de piel y encías, náusea transitoria autolimitada.",
+      "action_required": "Lavar boca y pelaje con agua tibia. Monitorear síntomas en el hogar y ofrecer agua fresca.",
+      "target_species": "ALL"
+    }
+  ],
+  "pain_assessments": [
+    {
+      "id": "pain-01",
+      "pet_id": "pet-cat-01",
+      "assessment_date": "2026-10-12T18:30:00.000Z",
+      "score": 1,
+      "ears_score": 1,
+      "eyes_score": 0,
+      "muzzle_score": 0,
+      "notes": "Orejas ligeramente rotadas; ojos y hocico relajados."
+    }
+  ]
+}
