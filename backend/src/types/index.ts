@@ -13,16 +13,41 @@ export interface User {
   password_hash: string;
   name: string;
   created_at: string;
+  is_verified?: boolean;
+  verification_code?: string | null;
+  verification_token?: string | null;
+  verification_expires_at?: string | Date | null;
+  reset_password_code?: string | null;
+  reset_password_token?: string | null;
+  reset_password_expires_at?: string | Date | null;
 }
+
+export type PetSex = 'MALE' | 'FEMALE';
+export type VaccineCategory = 'CORE' | 'LIFESTYLE' | 'MANDATORY';
 
 export interface Pet {
   id: string;
   user_id: string;
   name: string;
   species: Species;
+  sex?: PetSex;
+  is_neutered?: boolean;
+  neutered_date?: string;
   birth_date: string;
   weight_kg: number;
   avatar_url?: string;
+}
+
+export interface PetVaccine {
+  id: string;
+  pet_id: string;
+  vaccine_code: string;
+  name: string;
+  category: VaccineCategory;
+  applied: boolean;
+  applied_date?: string;
+  notes?: string;
+  created_at?: string;
 }
 
 export interface DailyLog {

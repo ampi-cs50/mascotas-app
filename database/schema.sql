@@ -12,7 +12,14 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_verified BOOLEAN DEFAULT FALSE,
+    verification_code VARCHAR(10),
+    verification_token VARCHAR(100),
+    verification_expires_at TIMESTAMP,
+    reset_password_code VARCHAR(10),
+    reset_password_token VARCHAR(100),
+    reset_password_expires_at TIMESTAMP
 );
 
 -- 2. Tabla: pets
@@ -21,6 +28,9 @@ CREATE TABLE IF NOT EXISTS pets (
     user_id VARCHAR(36) NOT NULL,
     name VARCHAR(255) NOT NULL,
     species VARCHAR(10) NOT NULL CHECK (species IN ('CAT', 'DOG')),
+    sex VARCHAR(10) DEFAULT 'FEMALE' CHECK (sex IN ('MALE', 'FEMALE')),
+    is_neutered BOOLEAN DEFAULT FALSE,
+    neutered_date DATE,
     birth_date DATE,
     weight_kg DECIMAL(5, 2),
     avatar_url TEXT,
@@ -78,8 +88,24 @@ CREATE TABLE IF NOT EXISTS pain_assessments (
     FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
 );
 
+-- 7. Tabla: pet_vaccines (Cartilla de Vacunación Preventiva)
+CREATE TABLE IF NOT EXISTS pet_vaccines (
+    id VARCHAR(36) PRIMARY KEY,
+    pet_id VARCHAR(36) NOT NULL,
+    vaccine_code VARCHAR(50) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(30) NOT NULL CHECK (category IN ('CORE', 'LIFESTYLE', 'MANDATORY')),
+    applied BOOLEAN DEFAULT FALSE,
+    applied_date DATE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
+    CONSTRAINT uq_pet_vaccine UNIQUE (pet_id, vaccine_code)
+);
+
 -- Índices recomendados para optimización de consultas
 CREATE INDEX IF NOT EXISTS idx_daily_logs_pet_date ON daily_logs(pet_id, log_date DESC);
 CREATE INDEX IF NOT EXISTS idx_clinical_events_pet_date ON clinical_events(pet_id, event_date DESC);
 CREATE INDEX IF NOT EXISTS idx_pain_assessments_pet_date ON pain_assessments(pet_id, assessment_date DESC);
+CREATE INDEX IF NOT EXISTS idx_pet_vaccines_pet ON pet_vaccines(pet_id);
 CREATE INDEX IF NOT EXISTS idx_toxicity_category ON toxicity_directory(category);

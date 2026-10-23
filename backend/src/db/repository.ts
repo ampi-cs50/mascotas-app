@@ -4,12 +4,14 @@ import bcrypt from 'bcryptjs';
 import {
   User,
   Pet,
+  PetVaccine,
   DailyLog,
   ClinicalEvent,
   ToxicityItem,
   PainAssessment,
   DailyLogSummary
 } from '../types/index.js';
+import { getDefaultVaccines } from './postgres.js';
 
 interface DatabaseData {
   users: User[];
@@ -18,6 +20,7 @@ interface DatabaseData {
   clinical_events: ClinicalEvent[];
   toxicity_directory: ToxicityItem[];
   pain_assessments: PainAssessment[];
+  pet_vaccines?: PetVaccine[];
 }
 
 const DB_FILE = path.join(process.cwd(), 'data', 'store.json');
@@ -29,7 +32,8 @@ const INITIAL_DATA: DatabaseData = {
       email: 'demo@mascotas.care',
       password_hash: bcrypt.hashSync('demo123', 10),
       name: 'Amparo Rodríguez',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      is_verified: true
     }
   ],
   pets: [
@@ -38,6 +42,9 @@ const INITIAL_DATA: DatabaseData = {
       user_id: 'usr-001',
       name: 'Luna',
       species: 'CAT',
+      sex: 'FEMALE',
+      is_neutered: true,
+      neutered_date: '2022-10-10',
       birth_date: '2022-04-15',
       weight_kg: 3.85,
       avatar_url: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200&auto=format&fit=crop&q=80'
@@ -47,6 +54,9 @@ const INITIAL_DATA: DatabaseData = {
       user_id: 'usr-001',
       name: 'Chester',
       species: 'DOG',
+      sex: 'MALE',
+      is_neutered: true,
+      neutered_date: '2022-03-15',
       birth_date: '2021-08-10',
       weight_kg: 26.50,
       avatar_url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200&auto=format&fit=crop&q=80'
@@ -297,10 +307,48 @@ class Repository {
     return this.data.users.find(u => u.id === id);
   }
 
+  findUserByToken(token: string): User | undefined {
+    return this.data.users.find(u => u.verification_token === token);
+  }
+
+  findUserByResetToken(token: string): User | undefined {
+    return this.data.users.find(u => u.reset_password_token === token);
+  }
+
   createUser(user: User): User {
     this.data.users.push(user);
     this.saveData(this.data);
     return user;
+  }
+
+  updateUser(id: string, updates: Partial<User>): User | undefined {
+    const idx = this.data.users.findIndex(u => u.id === id);
+    if (idx === -1) return undefined;
+    const updated: User = {
+      ...this.data.users[idx],
+      ...updates
+    };
+    this.data.users[idx] = updated;
+    this.saveData(this.data);
+    return updated;
+  }
+
+  verifyUser(userId: string): User | undefined {
+    return this.updateUser(userId, {
+      is_verified: true,
+      verification_code: null,
+      verification_token: null,
+      verification_expires_at: null
+    });
+  }
+
+  deleteUser(userId: string): boolean {
+    const initialLen = this.data.users.length;
+    this.data.users = this.data.users.filter(u => u.id !== userId);
+    const userPets = this.data.pets.filter(p => p.user_id === userId);
+    userPets.forEach(p => this.deletePet(p.id));
+    this.saveData(this.data);
+    return this.data.users.length < initialLen;
   }
 
   // --- Pets ---
@@ -329,6 +377,69 @@ class Repository {
       user_id: existing.user_id
     };
     this.data.pets[index] = updated;
+    this.saveData(this.data);
+    return updated;
+  }
+
+  deletePet(petId: string): boolean {
+    const initialLen = this.data.pets.length;
+    this.data.pets = this.data.pets.filter(p => p.id !== petId);
+    this.data.daily_logs = this.data.daily_logs.filter(l => l.pet_id !== petId);
+    this.data.clinical_events = this.data.clinical_events.filter(e => e.pet_id !== petId);
+    this.data.pain_assessments = this.data.pain_assessments.filter(a => a.pet_id !== petId);
+    if (this.data.pet_vaccines) {
+      this.data.pet_vaccines = this.data.pet_vaccines.filter(v => v.pet_id !== petId);
+    }
+    this.saveData(this.data);
+    return this.data.pets.length < initialLen;
+  }
+
+  // --- Vaccines ---
+  getVaccinesByPet(petId: string): PetVaccine[] {
+    if (!this.data.pet_vaccines) {
+      this.data.pet_vaccines = [];
+    }
+    const pet = this.getPetById(petId);
+    let vaxes = this.data.pet_vaccines.filter(v => v.pet_id === petId);
+    if (vaxes.length === 0 && pet) {
+      const defaults = getDefaultVaccines(petId, pet.species);
+      this.data.pet_vaccines.push(...defaults);
+      this.saveData(this.data);
+      vaxes = defaults;
+    }
+    return vaxes;
+  }
+
+  updateVaccine(petId: string, vaccineCode: string, updates: Partial<PetVaccine>): PetVaccine | undefined {
+    if (!this.data.pet_vaccines) {
+      this.data.pet_vaccines = [];
+    }
+    const index = this.data.pet_vaccines.findIndex(v => v.pet_id === petId && v.vaccine_code === vaccineCode);
+    if (index === -1) return undefined;
+    const existing = this.data.pet_vaccines[index];
+    const updated: PetVaccine = {
+      ...existing,
+      ...updates
+    };
+    this.data.pet_vaccines[index] = updated;
+
+    // Sincronizar evento clínico si se aplicó
+    if (updated.applied && updated.applied_date) {
+      const existingEv = this.data.clinical_events.find(
+        e => e.pet_id === petId && e.title.includes(existing.name)
+      );
+      if (!existingEv) {
+        this.data.clinical_events.push({
+          id: `ev-vax-${Date.now()}`,
+          pet_id: petId,
+          event_type: 'VACCINE',
+          event_date: updated.applied_date,
+          title: `Vacunación: ${existing.name}`,
+          notes: updated.notes || 'Registro actualizado desde cartilla'
+        });
+      }
+    }
+
     this.saveData(this.data);
     return updated;
   }

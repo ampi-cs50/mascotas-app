@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import {
   User,
   Pet,
+  PetVaccine,
   DailyLog,
   ClinicalEvent,
   ToxicityItem,
@@ -31,6 +32,97 @@ export async function query(text: string, params?: any[]) {
   return pool.query(text, params);
 }
 
+export function getDefaultVaccines(petId: string, species: 'CAT' | 'DOG'): PetVaccine[] {
+  if (species === 'CAT') {
+    return [
+      {
+        id: `vax-${petId}-01`,
+        pet_id: petId,
+        vaccine_code: 'fel-core-triple',
+        name: 'Triple Felina (FVRCP)',
+        category: 'CORE',
+        applied: false,
+        notes: 'Protege contra Panleucopenia, Rinotraqueítis y Calicivirus. Esencial aún si vive en departamento.'
+      },
+      {
+        id: `vax-${petId}-02`,
+        pet_id: petId,
+        vaccine_code: 'fel-mandatory-rabies',
+        name: 'Antirrábica Felina',
+        category: 'MANDATORY',
+        applied: false,
+        notes: 'Obligatoria por ley y salud pública contra zoonosis mortal.'
+      },
+      {
+        id: `vax-${petId}-03`,
+        pet_id: petId,
+        vaccine_code: 'fel-lifestyle-felv',
+        name: 'Leucemia Felina (FeLV)',
+        category: 'LIFESTYLE',
+        applied: false,
+        notes: 'Recomendada para gatos con acceso al exterior o convivencia con otros gatos. Opcional si vive 100% en interior.'
+      },
+      {
+        id: `vax-${petId}-04`,
+        pet_id: petId,
+        vaccine_code: 'fel-opt-chlamydia',
+        name: 'Clamidiosis Felina',
+        category: 'LIFESTYLE',
+        applied: false,
+        notes: 'Opcional según riesgo de conjuntivitis bacteriana y convivencia en comunidades.'
+      }
+    ];
+  } else {
+    return [
+      {
+        id: `vax-${petId}-01`,
+        pet_id: petId,
+        vaccine_code: 'can-core-multiple',
+        name: 'Polivalente Canina (Séxtuple)',
+        category: 'CORE',
+        applied: false,
+        notes: 'Protege contra Moquillo, Parvovirus, Hepatitis y Parainfluenza canina.'
+      },
+      {
+        id: `vax-${petId}-02`,
+        pet_id: petId,
+        vaccine_code: 'can-mandatory-rabies',
+        name: 'Antirrábica Canina',
+        category: 'MANDATORY',
+        applied: false,
+        notes: 'Obligatoria por ley nacional anualmente por salud pública.'
+      },
+      {
+        id: `vax-${petId}-03`,
+        pet_id: petId,
+        vaccine_code: 'can-core-lepto',
+        name: 'Leptospirosis Canina',
+        category: 'CORE',
+        applied: false,
+        notes: 'Protege contra bacteria Leptospira (orina de roedores y aguas estancadas). Zoonosis.'
+      },
+      {
+        id: `vax-${petId}-04`,
+        pet_id: petId,
+        vaccine_code: 'can-lifestyle-bordetella',
+        name: 'Tos de las Perreras (Bordetella)',
+        category: 'LIFESTYLE',
+        applied: false,
+        notes: 'Opcional según estilo de vida. Recomendada si asiste a guarderías, paseos grupales o peluquerías caninas.'
+      },
+      {
+        id: `vax-${petId}-05`,
+        pet_id: petId,
+        vaccine_code: 'can-opt-giardia',
+        name: 'Giardia Canina',
+        category: 'LIFESTYLE',
+        applied: false,
+        notes: 'Opcional en zonas húmedas o aguas estancadas.'
+      }
+    ];
+  }
+}
+
 // ====================================================================
 // Repositorio Asíncrono en PostgreSQL
 // ====================================================================
@@ -47,12 +139,80 @@ export const postgresDb = {
     return res.rows[0] || null;
   },
 
+  async findUserByToken(token: string): Promise<User | null> {
+    const res = await query('SELECT * FROM users WHERE verification_token = $1', [token]);
+    return res.rows[0] || null;
+  },
+
+  async findUserByResetToken(token: string): Promise<User | null> {
+    const res = await query('SELECT * FROM users WHERE reset_password_token = $1', [token]);
+    return res.rows[0] || null;
+  },
+
   async createUser(user: User): Promise<User> {
     await query(
-      'INSERT INTO users (id, email, password_hash, name, created_at) VALUES ($1, $2, $3, $4, $5)',
-      [user.id, user.email, user.password_hash, user.name, user.created_at || new Date()]
+      `INSERT INTO users (id, email, password_hash, name, created_at, is_verified, verification_code, verification_token, verification_expires_at) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        user.id,
+        user.email,
+        user.password_hash,
+        user.name,
+        user.created_at || new Date(),
+        user.is_verified ?? false,
+        user.verification_code || null,
+        user.verification_token || null,
+        user.verification_expires_at || null
+      ]
     );
     return user;
+  },
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | null> {
+    const existing = await this.findUserById(id);
+    if (!existing) return null;
+
+    const email = updates.email !== undefined ? updates.email : existing.email;
+    const password_hash = updates.password_hash !== undefined ? updates.password_hash : existing.password_hash;
+    const name = updates.name !== undefined ? updates.name : existing.name;
+    const is_verified = updates.is_verified !== undefined ? updates.is_verified : existing.is_verified;
+    const verification_code = updates.verification_code !== undefined ? updates.verification_code : existing.verification_code;
+    const verification_token = updates.verification_token !== undefined ? updates.verification_token : existing.verification_token;
+    const verification_expires_at = updates.verification_expires_at !== undefined ? updates.verification_expires_at : existing.verification_expires_at;
+    const reset_password_code = updates.reset_password_code !== undefined ? updates.reset_password_code : existing.reset_password_code;
+    const reset_password_token = updates.reset_password_token !== undefined ? updates.reset_password_token : existing.reset_password_token;
+    const reset_password_expires_at = updates.reset_password_expires_at !== undefined ? updates.reset_password_expires_at : existing.reset_password_expires_at;
+
+    await query(
+      `UPDATE users 
+       SET email = $1, password_hash = $2, name = $3, is_verified = $4, 
+           verification_code = $5, verification_token = $6, verification_expires_at = $7,
+           reset_password_code = $8, reset_password_token = $9, reset_password_expires_at = $10
+       WHERE id = $11`,
+      [
+        email, password_hash, name, is_verified, 
+        verification_code, verification_token, verification_expires_at,
+        reset_password_code, reset_password_token, reset_password_expires_at,
+        id
+      ]
+    );
+
+    return this.findUserById(id);
+  },
+
+  async verifyUser(userId: string): Promise<User | null> {
+    await query(
+      `UPDATE users 
+       SET is_verified = TRUE, verification_code = NULL, verification_token = NULL, verification_expires_at = NULL 
+       WHERE id = $1`,
+      [userId]
+    );
+    return this.findUserById(userId);
+  },
+
+  async deleteUser(userId: string): Promise<boolean> {
+    const res = await query('DELETE FROM users WHERE id = $1', [userId]);
+    return (res.rowCount ?? 0) > 0;
   },
 
   // --- Pets ---
@@ -68,9 +228,32 @@ export const postgresDb = {
 
   async createPet(pet: Pet): Promise<Pet> {
     await query(
-      'INSERT INTO pets (id, user_id, name, species, birth_date, weight_kg, avatar_url) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [pet.id, pet.user_id, pet.name, pet.species, pet.birth_date, pet.weight_kg, pet.avatar_url || '']
+      'INSERT INTO pets (id, user_id, name, species, sex, is_neutered, neutered_date, birth_date, weight_kg, avatar_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+      [
+        pet.id,
+        pet.user_id,
+        pet.name,
+        pet.species,
+        pet.sex || 'FEMALE',
+        pet.is_neutered !== undefined ? pet.is_neutered : false,
+        pet.neutered_date || null,
+        pet.birth_date,
+        pet.weight_kg,
+        pet.avatar_url || ''
+      ]
     );
+
+    // Inicializar vacunas estándar
+    const defaults = getDefaultVaccines(pet.id, pet.species);
+    for (const v of defaults) {
+      await query(
+        `INSERT INTO pet_vaccines (id, pet_id, vaccine_code, name, category, applied, applied_date, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (pet_id, vaccine_code) DO NOTHING`,
+        [v.id, v.pet_id, v.vaccine_code, v.name, v.category, v.applied, v.applied_date || null, v.notes || '']
+      );
+    }
+
     return pet;
   },
 
@@ -80,18 +263,100 @@ export const postgresDb = {
 
     const name = updates.name !== undefined ? updates.name : existing.name;
     const species = updates.species !== undefined ? updates.species : existing.species;
+    const sex = updates.sex !== undefined ? updates.sex : existing.sex;
+    const is_neutered = updates.is_neutered !== undefined ? updates.is_neutered : existing.is_neutered;
+    const neutered_date = updates.neutered_date !== undefined ? updates.neutered_date : existing.neutered_date;
     const birth_date = updates.birth_date !== undefined ? updates.birth_date : existing.birth_date;
     const weight_kg = updates.weight_kg !== undefined ? Number(updates.weight_kg) : existing.weight_kg;
     const avatar_url = updates.avatar_url !== undefined ? updates.avatar_url : existing.avatar_url;
 
     await query(
       `UPDATE pets 
-       SET name = $1, species = $2, birth_date = $3, weight_kg = $4, avatar_url = $5
-       WHERE id = $6`,
-      [name, species, birth_date, weight_kg, avatar_url, petId]
+       SET name = $1, species = $2, sex = $3, is_neutered = $4, neutered_date = $5, birth_date = $6, weight_kg = $7, avatar_url = $8
+       WHERE id = $9`,
+      [name, species, sex || 'FEMALE', is_neutered, neutered_date || null, birth_date, weight_kg, avatar_url, petId]
     );
 
     return this.getPetById(petId);
+  },
+
+  async deletePet(petId: string): Promise<boolean> {
+    const res = await query('DELETE FROM pets WHERE id = $1', [petId]);
+    return (res.rowCount ?? 0) > 0;
+  },
+
+  // --- Vaccines ---
+  async getVaccinesByPet(petId: string): Promise<PetVaccine[]> {
+    const res = await query(
+      'SELECT * FROM pet_vaccines WHERE pet_id = $1 ORDER BY created_at ASC',
+      [petId]
+    );
+
+    if (res.rows.length === 0) {
+      const pet = await this.getPetById(petId);
+      if (pet) {
+        const defaults = getDefaultVaccines(petId, pet.species);
+        for (const v of defaults) {
+          await query(
+            `INSERT INTO pet_vaccines (id, pet_id, vaccine_code, name, category, applied, applied_date, notes)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+             ON CONFLICT (pet_id, vaccine_code) DO NOTHING`,
+            [v.id, v.pet_id, v.vaccine_code, v.name, v.category, v.applied, v.applied_date || null, v.notes || '']
+          );
+        }
+        const updated = await query(
+          'SELECT * FROM pet_vaccines WHERE pet_id = $1 ORDER BY created_at ASC',
+          [petId]
+        );
+        return updated.rows;
+      }
+    }
+
+    return res.rows;
+  },
+
+  async updateVaccine(petId: string, vaccineCode: string, updates: Partial<PetVaccine>): Promise<PetVaccine | null> {
+    const existing = await query(
+      'SELECT * FROM pet_vaccines WHERE pet_id = $1 AND vaccine_code = $2',
+      [petId, vaccineCode]
+    );
+
+    if (existing.rows.length === 0) {
+      return null;
+    }
+
+    const current = existing.rows[0];
+    const applied = updates.applied !== undefined ? updates.applied : current.applied;
+    const applied_date = updates.applied_date !== undefined ? updates.applied_date : current.applied_date;
+    const notes = updates.notes !== undefined ? updates.notes : current.notes;
+
+    await query(
+      `UPDATE pet_vaccines 
+       SET applied = $1, applied_date = $2, notes = $3
+       WHERE pet_id = $4 AND vaccine_code = $5`,
+      [applied, applied_date || null, notes || '', petId, vaccineCode]
+    );
+
+    // Si se marcó como aplicada con fecha, sincronizar con clinical_events
+    if (applied && applied_date) {
+      const existingEvent = await query(
+        `SELECT id FROM clinical_events WHERE pet_id = $1 AND title ILIKE $2`,
+        [petId, `%${current.name}%`]
+      );
+      if (existingEvent.rows.length === 0) {
+        await query(
+          `INSERT INTO clinical_events (id, pet_id, event_type, event_date, title, notes)
+           VALUES ($1, $2, 'VACCINE', $3, $4, $5)`,
+          [`ev-vax-${Date.now()}`, petId, applied_date, `Vacunación: ${current.name}`, notes || 'Registro actualizado desde cartilla de vacunación']
+        );
+      }
+    }
+
+    const res = await query(
+      'SELECT * FROM pet_vaccines WHERE pet_id = $1 AND vaccine_code = $2',
+      [petId, vaccineCode]
+    );
+    return res.rows[0] || null;
   },
 
   // --- Daily Logs ---

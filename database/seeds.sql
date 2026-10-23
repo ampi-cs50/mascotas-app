@@ -10,10 +10,10 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. Mascotas
-INSERT INTO pets (id, user_id, name, species, birth_date, weight_kg, avatar_url)
+INSERT INTO pets (id, user_id, name, species, sex, is_neutered, neutered_date, birth_date, weight_kg, avatar_url)
 VALUES 
-('pet-cat-01', 'usr-001', 'Luna', 'CAT', '2022-04-15', 3.85, 'assets/cat-avatar.svg'),
-('pet-dog-02', 'usr-001', 'Chester', 'DOG', '2021-08-10', 26.50, 'assets/dog-avatar.svg')
+('pet-cat-01', 'usr-001', 'Luna', 'CAT', 'FEMALE', TRUE, '2022-10-10', '2022-04-15', 3.85, 'assets/cat-avatar.svg'),
+('pet-dog-02', 'usr-001', 'Chester', 'DOG', 'MALE', TRUE, '2022-03-15', '2021-08-10', 26.50, 'assets/dog-avatar.svg')
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. Directorio de Toxicidad (NUEVO)
@@ -56,3 +56,19 @@ INSERT INTO pain_assessments (id, pet_id, assessment_date, score, ears_score, ey
 VALUES 
 ('pain-01', 'pet-cat-01', '2026-10-12 18:30:00', 1, 1, 0, 0, 'Orejas ligeramente rotadas por ruido exterior; ojos y hocico relajados.')
 ON CONFLICT (id) DO NOTHING;
+
+-- 7. Cartilla y Chequeo de Vacunación Preventiva
+INSERT INTO pet_vaccines (id, pet_id, vaccine_code, name, category, applied, applied_date, notes)
+VALUES 
+('vax-luna-01', 'pet-cat-01', 'fel-core-triple', 'Triple Felina (FVRCP)', 'CORE', TRUE, '2026-03-10', 'Protege contra Panleucopenia, Rinotraqueítis y Calicivirus. Esencial aún en departamentos.'),
+('vax-luna-02', 'pet-cat-01', 'fel-mandatory-rabies', 'Antirrábica Felina', 'MANDATORY', TRUE, '2025-11-20', 'Obligatoria por normativa de salud pública.'),
+('vax-luna-03', 'pet-cat-01', 'fel-lifestyle-felv', 'Leucemia Felina (FeLV)', 'LIFESTYLE', FALSE, NULL, 'Opcional si vive 100% en interior sin contacto con gatos externos.'),
+('vax-luna-04', 'pet-cat-01', 'fel-opt-chlamydia', 'Clamidiosis Felina', 'LIFESTYLE', FALSE, NULL, 'Opcional según riesgo de conjuntivitis y hacinamiento.'),
+
+('vax-chester-01', 'pet-dog-02', 'can-core-multiple', 'Polivalente Canina (Séxtuple)', 'CORE', TRUE, '2026-02-20', 'Protege contra Moquillo, Parvovirus, Hepatitis y Parainfluenza canina.'),
+('vax-chester-02', 'pet-dog-02', 'can-mandatory-rabies', 'Antirrábica Canina', 'MANDATORY', TRUE, '2026-02-20', 'Obligatoria anualmente por salud pública.'),
+('vax-chester-03', 'pet-dog-02', 'can-core-lepto', 'Leptospirosis Canina', 'CORE', TRUE, '2026-02-20', 'Protege contra bacteria Leptospira.'),
+('vax-chester-04', 'pet-dog-02', 'can-lifestyle-bordetella', 'Tos de las Perreras (Bordetella)', 'LIFESTYLE', FALSE, NULL, 'Opcional según estilo de vida (guarderías, peluquerías caninas).'),
+('vax-chester-05', 'pet-dog-02', 'can-opt-giardia', 'Giardia Canina', 'LIFESTYLE', FALSE, NULL, 'Opcional en zonas húmedas o aguas estancadas.')
+ON CONFLICT (pet_id, vaccine_code) DO NOTHING;
+
