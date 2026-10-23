@@ -49,19 +49,31 @@ Aplicación web **mobile-first** para el registro diario de hábitos, detección
    - Filtros por categorías (Plantas, Alimentos, Medicamentos, Objetos, Químicos).
    - Alertas visuales con código de color (`Peligro Mortal`, `Peligro Severo`, `Moderado`, `Leve`).
    - Acciones de urgencia recomendadas y botón de discado directo a emergencias veterinarias.
-4. **Evaluador de Dolor Facial (Escala de Muecas)** (`/pain-assessment`):
-   - Cuestionario visual interactivo basado en la **Feline Grimace Scale (FGS)**.
-   - Comparación visual paso a paso de:
-     1. Posición de las Orejas (Erguidas / Rotadas / Aplanadas).
-     2. Tensión Orbital / Ojos (Abiertos / Entrecerrados / Cerrados).
-     3. Hocico y Bigotes (Relajado / Tenso / Proyectado).
-   - Cálculo automático del puntaje (0 a 6) con semáforo de riesgo y recomendaciones clínicas.
-5. **Insights (Tendencias)** (`/insights`):
+4. **Evaluador de Dolor Clínico Adaptativo (Gatos y Perros)** (`/pain-assessment`):
+   - **En Gatos (FGS - Feline Grimace Scale)**:
+     - 1. Posición de las Orejas (Erguidas / Rotadas / Aplanadas).
+     - 2. Tensión Orbital / Ojos (Abiertos / Entrecerrados / Cerrados).
+     - 3. Hocico y Bigotes (Relajado / Tenso / Proyectado).
+   - **En Perros (Escalas Conductuales y Posturales Glasgow CMPS-SF / CSU)**:
+     - 1. Postura Corporal y Movilidad (Relajada y Fluida / Rígida y Tensa / Encorvada por Cifosis o Dolor).
+     - 2. Comportamiento, Ánimo y Mirada (Sociable y Atento / Desganado y Apagado / Inquieto, Tembloroso o Mirada Fija de Dolor).
+     - 3. Respuesta a la Caricia y Palpación (Receptivo y Dócil / Se Aparta con Tensión / Rechazo Activo, Quejido o Gruñido Defensivo).
+   - Ilustraciones vectoriales (SVG) de alto contraste, nítidas y diseñadas a medida para cada especie y nivel de dolor.
+   - Cálculo automático del puntaje (0 a 6) con semáforo de riesgo, recomendaciones clínicas según especie y selector rápido de mascota activa.
+5. **Cartilla y Chequeo de Vacunación** (`/vaccines`):
+   - Registro interactivo de vacunas aplicadas con fecha y cálculo automático de próximo refuerzo (1 año).
+   - Clasificación por categorías con código visual:
+     - ⭐ **Esenciales (Core)**: Vitales para todos los animales (Panleucopenia, Rinotraqueítis y Calicivirus en gatos; Parvovirus, Moquillo y Hepatitis en perros).
+     - ⚖️ **Obligatorias por Ley**: Antirrábica anual por normativa sanitaria y salud pública.
+     - 🏡 **Según Estilo de Vida (Opcionales)**: Guía clara sobre cuándo aplicarlas (Leucemia felina para gatos con acceso al exterior; Tos de las Perreras / Bordetella para perros que van a guarderías o peluquerías).
+   - Acordeón educativo no abrumador: *"¿Por qué es importante?"* y resolución de dudas sobre gatos de interior o convivencia.
+   - Barra de progreso del porcentaje de cobertura inmunitaria de la mascota.
+6. **Insights (Tendencias)** (`/insights`):
    - Gráfico de barras de evolución de 7 días (Agua, Comida y Vitalidad).
    - Distribución de estados de ánimo y anomalías registradas.
    - Generador y exportador de **Reporte Veterinario** en modal formateado para consulta médica.
-6. **Navegación**:
-   - `BottomNav` fijo en la parte inferior de la pantalla simulada.
+7. **Navegación**:
+   - `BottomNav` fijo en la parte inferior de la pantalla simulada con acceso directo a Inicio, Bitácora, Vacunas, Escala, Prevención y Tendencias.
 
 ---
 
@@ -126,13 +138,23 @@ O manualmente:
 
 | Método | Endpoint | Descripción |
 |---|---|---|
-| `POST` | `/api/v1/auth/login` | Autenticación con email y contraseña (devuelve JWT) |
-| `POST` | `/api/v1/auth/register` | Registro de nuevos usuarios |
+| `POST` | `/api/v1/auth/validate-email` | Validación en tiempo real: sintaxis RFC 5322, consulta DNS de registros MX y sugerencia de typos |
+| `POST` | `/api/v1/auth/register` | Registro de usuario con validación estricta MX y envío de código obligatorio (sin emitir JWT hasta verificar) |
+| `POST` | `/api/v1/auth/verify-code` | Confirmación obligatoria con código numérico de 6 dígitos (activa la cuenta y emite JWT) |
+| `POST` | `/api/v1/auth/verify-token` | Confirmación obligatoria con enlace directo de un clic por token seguro |
+| `POST` | `/api/v1/auth/resend-code` | Reenvío de código de verificación con expiración renovada de 15 min |
+| `POST` | `/api/v1/auth/forgot-password` | Solicitar código de 6 dígitos y enlace de recuperación de contraseña por correo |
+| `POST` | `/api/v1/auth/reset-password` | Restablecer contraseña mediante código de 6 dígitos o token directo |
+| `POST` | `/api/v1/auth/login` | Autenticación con email y contraseña (bloquea con 403 si el correo no está verificado) |
+| `GET`  | `/api/v1/auth/me` | Obtiene el perfil del usuario autenticado |
 | `GET` | `/api/v1/pets` | Listado de mascotas del usuario |
 | `POST` | `/api/v1/pets/:petId/logs` | Crea o actualiza registro diario (Upsert único por fecha) |
 | `GET` | `/api/v1/pets/:petId/logs/summary` | Métricas agregadas y alertas para gráficos |
 | `GET` | `/api/v1/pets/:petId/logs` | Historial completo de bitácora diaria |
 | `GET` | `/api/v1/toxicity-directory` | Buscador de toxicidad con filtros `?q=` y `?category=` |
-| `POST` | `/api/v1/pets/:petId/pain-assessments` | Guardar evaluación de expresión facial (FGS) |
+| `POST` | `/api/v1/pets/:petId/pain-assessments` | Guardar evaluación de dolor / expresión facial |
 | `GET` | `/api/v1/pets/:petId/pain-assessments` | Historial de evaluaciones de dolor |
+| `GET` | `/api/v1/pets/:petId/vaccines` | Listado y estado de cartilla de vacunación |
+| `PUT` | `/api/v1/pets/:petId/vaccines/:vaccineCode` | Registrar o actualizar aplicación de vacuna |
 | `GET` | `/api/v1/pets/:petId/clinical-events` | Vacunas, desparasitaciones y controles |
+
