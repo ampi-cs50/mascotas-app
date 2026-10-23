@@ -7,14 +7,32 @@ export type EventType = 'VACCINE' | 'DEWORMING' | 'MEDICATION' | 'CHECKUP' | 'SU
 export type DangerLevel = 'MILD' | 'MODERATE' | 'SEVERE' | 'FATAL';
 export type ToxicityCategory = 'PLANT' | 'FOOD' | 'MEDICATION' | 'OBJECT' | 'CHEMICAL';
 
+export type PetSex = 'MALE' | 'FEMALE';
+export type VaccineCategory = 'CORE' | 'LIFESTYLE' | 'MANDATORY';
+
 export interface Pet {
   id: string;
   user_id: string;
   name: string;
   species: Species;
+  sex?: PetSex;
+  is_neutered?: boolean;
+  neutered_date?: string;
   birth_date: string;
   weight_kg: number;
   avatar_url?: string;
+}
+
+export interface PetVaccine {
+  id: string;
+  pet_id: string;
+  vaccine_code: string;
+  name: string;
+  category: VaccineCategory;
+  applied: boolean;
+  applied_date?: string;
+  notes?: string;
+  created_at?: string;
 }
 
 export interface DailyLog {

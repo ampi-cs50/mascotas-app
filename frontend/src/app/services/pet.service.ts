@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, catchError, tap } from 'rxjs';
 import {
   Pet,
+  PetVaccine,
   DailyLog,
   ClinicalEvent,
   ToxicityItem,
@@ -30,7 +31,9 @@ export class PetService {
   public recentLogs = signal<DailyLog[]>([]);
   public toxicityItems = signal<ToxicityItem[]>([]);
   public clinicalEvents = signal<ClinicalEvent[]>([]);
+  public petVaccines = signal<PetVaccine[]>([]);
   public isLoadingPets = signal<boolean>(false);
+  public isLoadingVaccines = signal<boolean>(false);
 
   // App-wide modal state
   public isEditModalOpen = signal<boolean>(false);
@@ -60,6 +63,7 @@ export class PetService {
     this.selectedPetId.set(petId);
     this.loadLogsSummary(petId);
     this.loadClinicalEvents(petId);
+    this.loadVaccines(petId);
   }
 
   public refreshAll() {
@@ -83,11 +87,13 @@ export class PetService {
           this.selectedPetId.set(activeId);
           this.loadLogsSummary(activeId);
           this.loadClinicalEvents(activeId);
+          this.loadVaccines(activeId);
         } else {
           this.selectedPetId.set('');
           this.logsSummary.set(null);
           this.recentLogs.set([]);
           this.clinicalEvents.set([]);
+          this.petVaccines.set([]);
         }
       }),
       catchError(err => {
@@ -98,13 +104,23 @@ export class PetService {
     ).subscribe();
   }
 
-  public addPet(petData: { name: string; species: 'CAT' | 'DOG'; weight_kg?: number; birth_date?: string; avatar_url?: string }): Observable<Pet> {
+  public addPet(petData: {
+    name: string;
+    species: 'CAT' | 'DOG';
+    sex?: 'MALE' | 'FEMALE';
+    is_neutered?: boolean;
+    neutered_date?: string;
+    weight_kg?: number;
+    birth_date?: string;
+    avatar_url?: string;
+  }): Observable<Pet> {
     return this.http.post<Pet>(`${this.baseUrl}/pets`, petData).pipe(
       tap(newPet => {
         this.pets.update(current => [...current, newPet]);
         this.selectedPetId.set(newPet.id);
         this.loadLogsSummary(newPet.id);
         this.loadClinicalEvents(newPet.id);
+        this.loadVaccines(newPet.id);
       })
     );
   }
@@ -113,6 +129,62 @@ export class PetService {
     return this.http.put<Pet>(`${this.baseUrl}/pets/${petId}`, updates).pipe(
       tap(updatedPet => {
         this.pets.update(current => current.map(p => p.id === petId ? updatedPet : p));
+      })
+    );
+  }
+
+  public deletePet(petId: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/pets/${petId}`).pipe(
+      tap(() => {
+        this.pets.update(current => current.filter(p => p.id !== petId));
+        const remaining = this.pets();
+        if (remaining.length > 0) {
+          const nextActive = remaining[0];
+          this.selectedPetId.set(nextActive.id);
+          this.loadLogsSummary(nextActive.id);
+          this.loadClinicalEvents(nextActive.id);
+          this.loadVaccines(nextActive.id);
+        } else {
+          this.selectedPetId.set('');
+          this.logsSummary.set(null);
+          this.recentLogs.set([]);
+          this.clinicalEvents.set([]);
+          this.petVaccines.set([]);
+        }
+      })
+    );
+  }
+
+  // --- Vaccines ---
+  public loadVaccines(petId: string) {
+    if (!petId) {
+      this.petVaccines.set([]);
+      return;
+    }
+    this.isLoadingVaccines.set(true);
+    this.http.get<PetVaccine[]>(`${this.baseUrl}/pets/${petId}/vaccines`).pipe(
+      tap(vaxes => {
+        this.isLoadingVaccines.set(false);
+        this.petVaccines.set(vaxes || []);
+      }),
+      catchError(err => {
+        this.isLoadingVaccines.set(false);
+        console.warn('Error loading vaccines', err);
+        this.petVaccines.set([]);
+        return of([]);
+      })
+    ).subscribe();
+  }
+
+  public updateVaccine(petId: string, vaccineCode: string, applied: boolean, applied_date?: string, notes?: string): Observable<PetVaccine> {
+    return this.http.put<PetVaccine>(`${this.baseUrl}/pets/${petId}/vaccines/${vaccineCode}`, {
+      applied,
+      applied_date,
+      notes
+    }).pipe(
+      tap(updated => {
+        this.petVaccines.update(current => current.map(v => v.vaccine_code === vaccineCode ? updated : v));
+        this.loadClinicalEvents(petId);
       })
     );
   }

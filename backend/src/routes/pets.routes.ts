@@ -30,7 +30,7 @@ router.post('/', async (req: AuthRequest, res) => {
     return res.status(401).json({ error: 'No autenticado' });
   }
 
-  const { name, species, birth_date, weight_kg, avatar_url } = req.body;
+  const { name, species, sex, is_neutered, neutered_date, birth_date, weight_kg, avatar_url } = req.body;
 
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({ error: 'El nombre de la mascota es obligatorio' });
@@ -41,6 +41,7 @@ router.post('/', async (req: AuthRequest, res) => {
   }
 
   const normalizedSpecies = species && species.toUpperCase() === 'DOG' ? 'DOG' : 'CAT';
+  const normalizedSex = sex && sex.toUpperCase() === 'MALE' ? 'MALE' : 'FEMALE';
   const weight = Number(weight_kg);
 
   if (isNaN(weight) || weight <= 0 || weight > 150) {
@@ -58,6 +59,9 @@ router.post('/', async (req: AuthRequest, res) => {
     user_id: userId,
     name: name.trim(),
     species: normalizedSpecies,
+    sex: normalizedSex,
+    is_neutered: Boolean(is_neutered),
+    neutered_date: is_neutered && neutered_date ? neutered_date : undefined,
     birth_date: birthDateStr,
     weight_kg: Math.round(weight * 100) / 100,
     avatar_url: avatar_url || (normalizedSpecies === 'DOG'
@@ -92,7 +96,7 @@ router.put('/:petId', async (req: AuthRequest, res) => {
     return res.status(403).json({ error: 'No tienes permisos para modificar esta mascota' });
   }
 
-  const { name, species, birth_date, weight_kg, avatar_url } = req.body;
+  const { name, species, sex, is_neutered, neutered_date, birth_date, weight_kg, avatar_url } = req.body;
   const updates: Partial<Pet> = {};
 
   if (name !== undefined) {
@@ -107,6 +111,21 @@ router.put('/:petId', async (req: AuthRequest, res) => {
 
   if (species !== undefined) {
     updates.species = species.toUpperCase() === 'DOG' ? 'DOG' : 'CAT';
+  }
+
+  if (sex !== undefined) {
+    updates.sex = sex.toUpperCase() === 'MALE' ? 'MALE' : 'FEMALE';
+  }
+
+  if (is_neutered !== undefined) {
+    updates.is_neutered = Boolean(is_neutered);
+    if (!updates.is_neutered) {
+      updates.neutered_date = undefined;
+    }
+  }
+
+  if (neutered_date !== undefined) {
+    updates.neutered_date = neutered_date || undefined;
   }
 
   if (weight_kg !== undefined) {
@@ -136,6 +155,35 @@ router.put('/:petId', async (req: AuthRequest, res) => {
     console.warn('Fallback to memory for updatePet', e);
     const updated = db.updatePet(petId, updates);
     res.json(updated);
+  }
+});
+
+// DELETE /pets/:petId - Delete pet profile and all associated data
+router.delete('/:petId', async (req: AuthRequest, res) => {
+  const { petId } = req.params;
+  const userId = req.userId;
+
+  let pet = await postgresDb.getPetById(petId).catch(() => null);
+  if (!pet) {
+    pet = db.getPetById(petId) || null;
+  }
+
+  if (!pet) {
+    return res.status(404).json({ error: 'Mascota no encontrada' });
+  }
+
+  if (userId && pet.user_id !== userId) {
+    return res.status(403).json({ error: 'No tienes permisos para eliminar esta mascota' });
+  }
+
+  try {
+    await postgresDb.deletePet(petId);
+    db.deletePet(petId);
+    res.json({ success: true, message: 'Perfil de mascota eliminado exitosamente' });
+  } catch (e) {
+    console.warn('Fallback to memory for deletePet', e);
+    db.deletePet(petId);
+    res.json({ success: true, message: 'Perfil de mascota eliminado exitosamente' });
   }
 });
 
@@ -322,6 +370,47 @@ router.post('/:petId/clinical-events', async (req, res) => {
     res.status(201).json(created);
   } catch {
     res.status(201).json(db.createClinicalEvent(newEvent));
+  }
+});
+
+// GET /pets/:petId/vaccines - List vaccination status
+router.get('/:petId/vaccines', async (req, res) => {
+  const { petId } = req.params;
+  try {
+    const vaccines = await postgresDb.getVaccinesByPet(petId);
+    res.json(vaccines);
+  } catch (e) {
+    console.warn('Fallback to memory for getVaccinesByPet', e);
+    res.json(db.getVaccinesByPet(petId));
+  }
+});
+
+// PUT /pets/:petId/vaccines/:vaccineCode - Update vaccine check status
+router.put('/:petId/vaccines/:vaccineCode', async (req, res) => {
+  const { petId, vaccineCode } = req.params;
+  const { applied, applied_date, notes } = req.body;
+
+  try {
+    const updated = await postgresDb.updateVaccine(petId, vaccineCode, {
+      applied: Boolean(applied),
+      applied_date: applied ? (applied_date || new Date().toISOString().split('T')[0]) : undefined,
+      notes: notes !== undefined ? notes : undefined
+    });
+    if (!updated) {
+      return res.status(404).json({ error: 'Vacuna no encontrada' });
+    }
+    res.json(updated);
+  } catch (e) {
+    console.warn('Fallback to memory for updateVaccine', e);
+    const updated = db.updateVaccine(petId, vaccineCode, {
+      applied: Boolean(applied),
+      applied_date: applied ? (applied_date || new Date().toISOString().split('T')[0]) : undefined,
+      notes: notes !== undefined ? notes : undefined
+    });
+    if (!updated) {
+      return res.status(404).json({ error: 'Vacuna no encontrada' });
+    }
+    res.json(updated);
   }
 });
 

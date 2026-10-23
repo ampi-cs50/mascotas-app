@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -26,7 +26,11 @@ import { PetService } from '../../services/pet.service';
                 <span class="status-text">Seguimiento Activo Hoy</span>
               </div>
               <h1 class="pet-name-lg">{{ pet.name }}</h1>
-              <p class="pet-subtext">Peso: <strong>{{ pet.weight_kg }} kg</strong> • Registro continuo</p>
+              <div class="pet-tags-row">
+                <span class="pet-tag-sm">{{ pet.sex === 'MALE' ? '♂ Macho' : '♀ Hembra' }}</span>
+                <span class="pet-tag-sm">{{ pet.is_neutered ? '✂️ Castrado/a' : 'Sin castrar' }}</span>
+                <span class="pet-tag-sm"><strong>{{ pet.weight_kg }} kg</strong></span>
+              </div>
             </div>
           </div>
 
@@ -129,17 +133,39 @@ import { PetService } from '../../services/pet.service';
         </section>
       }
 
-      <!-- Acceso Rápido al Evaluador de Dolor Facial (Grimace Scale) -->
+      <!-- Chequeo y Cartilla de Vacunas Preventivas -->
+      <section class="card vax-promo-card">
+        <div class="promo-header">
+          <div class="vax-icon-pill">💉 Cartilla Preventiva</div>
+          <span class="vax-ratio">{{ appliedVaccinesCount() }} de {{ totalVaccinesCount() }} al día ({{ vaccineCoveragePercent() }}%)</span>
+        </div>
+        <h3 class="vax-title">Chequeo de Vacunas</h3>
+        <p class="vax-desc">
+          Verifica qué vacunas están dadas y cuándo. Información clara sobre vacunas esenciales, obligatorias y opcionales según estilo de vida (indoor / paseos).
+        </p>
+
+        <div class="vax-mini-track">
+          <div class="vax-mini-fill" [style.width.%]="vaccineCoveragePercent()"></div>
+        </div>
+
+        <a routerLink="/vaccines" class="btn-pill btn-pill--active vax-btn">
+          Ver Cartilla y Guía de Vacunas →
+        </a>
+      </section>
+
+      <!-- Acceso Rápido al Evaluador de Dolor (Grimace Scale felina / Glasgow canina) -->
       <section class="card grimace-promo-card">
         <div class="promo-header">
-          <div class="promo-badge">NUEVO</div>
-          <h3>Evaluador de Dolor Facial</h3>
+          <div class="promo-badge">CLÍNICO</div>
+          <h3>{{ activePet()?.species === 'DOG' ? 'Evaluador de Dolor Canino' : 'Evaluador de Dolor Facial' }}</h3>
         </div>
         <p class="promo-desc">
-          Detecta dolor oculto mediante la escala de muecas (Feline Grimace Scale). Compara orejas, ojos y hocico en 3 pasos.
+          {{ activePet()?.species === 'DOG'
+            ? 'Detecta dolor osteomuscular o visceral mediante la Escala Glasgow / CSU: evalúa postura, ánimo y respuesta al tacto en 3 pasos.'
+            : 'Detecta dolor oculto mediante la escala de muecas (Feline Grimace Scale). Compara orejas, ojos y hocico en 3 pasos.' }}
         </p>
         <a routerLink="/pain-assessment" class="btn-pill btn-pill--active promo-btn">
-          Evaluar Expresión Facial →
+          {{ activePet()?.species === 'DOG' ? 'Evaluar Dolor Canino →' : 'Evaluar Expresión Facial →' }}
         </a>
       </section>
 
@@ -445,9 +471,20 @@ import { PetService } from '../../services/pet.service';
         margin: 0;
       }
 
-      .pet-subtext {
-        font-size: 0.8rem;
-        color: var(--color-text-muted);
+      .pet-tags-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.25rem;
+
+        .pet-tag-sm {
+          font-size: 0.72rem;
+          background: rgba(45, 58, 47, 0.07);
+          color: var(--color-text-main);
+          padding: 0.15rem 0.5rem;
+          border-radius: var(--radius-pill);
+          font-weight: 600;
+        }
       }
     }
 
@@ -595,6 +632,70 @@ import { PetService } from '../../services/pet.service';
       }
     }
 
+    .vax-promo-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f3f7f4 100%);
+      border: 1px solid rgba(122, 158, 126, 0.35);
+
+      .promo-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.35rem;
+
+        .vax-icon-pill {
+          background-color: rgba(122, 158, 126, 0.2);
+          color: #2b5730;
+          font-size: 0.68rem;
+          font-weight: 800;
+          padding: 0.2rem 0.5rem;
+          border-radius: var(--radius-pill);
+        }
+
+        .vax-ratio {
+          font-size: 0.72rem;
+          font-weight: 800;
+          color: var(--color-active);
+        }
+      }
+
+      .vax-title {
+        margin: 0.2rem 0 0.35rem 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--color-text-main);
+      }
+
+      .vax-desc {
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+        margin: 0 0 0.6rem 0;
+        line-height: 1.4;
+      }
+
+      .vax-mini-track {
+        height: 0.45rem;
+        background-color: rgba(45, 58, 47, 0.08);
+        border-radius: var(--radius-pill);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+
+        .vax-mini-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #7A9E7E 0%, #528057 100%);
+          border-radius: var(--radius-pill);
+          transition: width 0.3s ease;
+        }
+      }
+
+      .vax-btn {
+        width: 100%;
+        text-decoration: none;
+        box-sizing: border-box;
+        text-align: center;
+        display: block;
+      }
+    }
+
     .grimace-promo-card {
       background: linear-gradient(135deg, #f3f7f3 0%, #e8f0e8 100%);
       border: 1px solid rgba(122, 158, 126, 0.3);
@@ -724,6 +825,14 @@ export class DashboardComponent {
   summary = this.petService.logsSummary;
   recentLogs = this.petService.recentLogs;
   clinicalEvents = this.petService.clinicalEvents;
+  petVaccines = this.petService.petVaccines;
+
+  totalVaccinesCount = computed(() => this.petVaccines().length);
+  appliedVaccinesCount = computed(() => this.petVaccines().filter(v => v.applied).length);
+  vaccineCoveragePercent = computed(() => {
+    const total = this.totalVaccinesCount();
+    return total > 0 ? Math.round((this.appliedVaccinesCount() / total) * 100) : 0;
+  });
 
   get latestLog() {
     return () => {
