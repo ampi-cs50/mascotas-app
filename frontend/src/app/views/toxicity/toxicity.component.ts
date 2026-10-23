@@ -23,11 +23,17 @@ import { ToxicityItem, ToxicityCategory, DangerLevel } from '../../models/pet.mo
           <div class="emergency-icon">🚨</div>
           <div class="emergency-text">
             <h4>¿Sospechas de intoxicación aguda?</h4>
-            <p>No esperes a la aparición de síntomas graves.</p>
+            <p>No esperes a la aparición de síntomas graves. Encuentra la clínica 24h más cercana.</p>
           </div>
         </div>
-        <a href="tel:911" class="btn-pill emergency-call-btn">
-          📞 Llamar Urgencias Vet
+        <a 
+          href="https://www.google.com/maps/search/?api=1&query=urgencias+veterinaria" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="btn-pill emergency-call-btn"
+          id="btn-urgencias-vet-maps"
+          title="Abrir Google Maps con urgencias veterinarias cercanas">
+          📍 Llamar Urgencias Vet (Google Maps)
         </a>
       </section>
 
@@ -152,16 +158,29 @@ import { ToxicityItem, ToxicityCategory, DangerLevel } from '../../models/pet.mo
       }
 
       .emergency-call-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
         background-color: #dc2626;
         color: #ffffff;
         font-weight: 800;
+        font-size: 0.9rem;
         border: none;
         text-align: center;
         text-decoration: none;
         box-shadow: 0 0.25rem 0.75rem rgba(220, 38, 38, 0.35);
+        transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+        cursor: pointer;
 
         &:hover {
           filter: brightness(1.1);
+          transform: translateY(-1px);
+          box-shadow: 0 0.4rem 1rem rgba(220, 38, 38, 0.45);
+        }
+
+        &:active {
+          transform: translateY(0);
         }
       }
     }
