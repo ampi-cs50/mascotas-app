@@ -27,7 +27,7 @@ import { RouterModule } from '@angular/router';
         routerLinkActive="active" 
         class="nav-tab">
         <div class="nav-icon">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
             <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -36,6 +36,22 @@ import { RouterModule } from '@angular/router';
           </svg>
         </div>
         <span class="nav-text">Bitácora</span>
+      </a>
+
+      <a 
+        routerLink="/vaccines" 
+        routerLinkActive="active" 
+        class="nav-tab"
+        title="Cartilla y Chequeo de Vacunas">
+        <div class="nav-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 3l2 2-9 9-2-2 9-9z"></path>
+            <path d="M13 5l2 2"></path>
+            <path d="M5 15l-2 6 6-2 9-9-4-4-9 9z"></path>
+            <path d="M3 21l3-3"></path>
+          </svg>
+        </div>
+        <span class="nav-text">Vacunas</span>
       </a>
 
       <a 
